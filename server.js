@@ -17,7 +17,7 @@ const upload = multer({ dest: "uploads/" }); // Dossier temporaire pour les imag
 
 // 🧠 Spécifie à fluent-ffmpeg le chemin du binaire ffmpeg
 ffmpeg.setFfmpegPath(ffmpegPath);
-
+console.log("🔍 ffmpegPath utilisé :", ffmpegPath);
 // ✅ Crée le dossier 'output' s'il n'existe pas
 if (!fs.existsSync("output")) {
   fs.mkdirSync("output");
