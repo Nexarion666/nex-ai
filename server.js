@@ -1,51 +1,50 @@
 const express = require("express");
 const multer = require("multer");
 const ffmpeg = require("fluent-ffmpeg");
-const ffmpegPath = require("ffmpeg-static"); // ✅ Chemin dynamique vers le binaire ffmpeg
+const ffmpegPath = require("ffmpeg-static");
+const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 
 const app = express();
 const port = 10000;
 
-// Dossier où seront stockées temporairement les images uploadées
-const upload = multer({ dest: "uploads/" });
+// 👉 Middleware
+app.use(cors()); // 🔓 Autorise toutes les origines (nécessaire pour HTML local)
+app.use(express.static("public")); // Sert les fichiers HTML, CSS, etc.
 
-// 🔧 Lien entre fluent-ffmpeg et le bon binaire ffmpeg
+const upload = multer({ dest: "uploads/" }); // Dossier temporaire pour les images
+
+// 🧠 Spécifie à fluent-ffmpeg le chemin du binaire ffmpeg
 ffmpeg.setFfmpegPath(ffmpegPath);
 
-// Permet de servir animate.html et autres fichiers statiques
-app.use(express.static("public"));
+// ✅ Crée le dossier 'output' s'il n'existe pas
+if (!fs.existsSync("output")) {
+  fs.mkdirSync("output");
+}
 
-// Endpoint POST /generate
+// 🎬 Endpoint de génération
 app.post("/generate", upload.single("image"), (req, res) => {
   const inputPath = req.file.path;
   const outputPath = `output/${Date.now()}.mp4`;
 
-  // ✅ S'assure que le dossier "output" existe
-  if (!fs.existsSync("output")) {
-    fs.mkdirSync("output");
-  }
-
-  console.log("🔧 Traitement de l'image :", inputPath);
-
   ffmpeg(inputPath)
-    .loop(3) // par exemple 3 secondes
+    .loop(3) // Durée en secondes
     .outputOptions("-preset", "fast")
     .on("end", () => {
-      console.log("✅ Vidéo générée :", outputPath);
+      console.log("✅ Vidéo prête :", outputPath);
       res.download(outputPath, () => {
-        fs.unlinkSync(inputPath); // nettoie après envoi
+        fs.unlinkSync(inputPath); // Nettoyage
         fs.unlinkSync(outputPath);
       });
     })
     .on("error", (err) => {
       console.error("❌ Erreur ffmpeg :", err.message);
-      res.status(500).send("Erreur pendant le traitement vidéo.");
+      res.status(500).send("Erreur de traitement vidéo.");
     })
     .save(outputPath);
 });
 
 app.listen(port, () => {
-  console.log(`✅ Serveur actif sur le port ${port}`);
+  console.log(`🚀 Serveur actif sur http://localhost:${port}`);
 });
