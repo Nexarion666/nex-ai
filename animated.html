@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Animateur d'image</title>
+  <meta charset="UTF-8" />
+  <title>Animateur d’image IA</title>
 </head>
 <body>
-  <h2>Choisis une image</h2>
+  <h2>Image + Texte à animer</h2>
+
   <form id="formulaire" enctype="multipart/form-data">
-    <input type="file" name="image" accept="image/*" required />
+    <label>🖼️ Choisir une image :</label><br />
+    <input type="file" name="image" accept="image/*" required /><br /><br />
+
+    <label>💬 Texte / prompt :</label><br />
+    <textarea name="prompt" placeholder="Ex : Fais dire à l’image : Bonjour !" rows="3" cols="40"></textarea><br /><br />
+
     <button type="submit">Animer</button>
   </form>
-  <div id="résultat"></div>
+
+  <div id="résultat" style="margin-top:20px;"></div>
 
   <script>
     document.getElementById("formulaire").addEventListener("submit", async (e) => {
       e.preventDefault();
       const data = new FormData(e.target);
+
       const res = await fetch("https://www.nexarion.sale/generate", {
         method: "POST",
         headers: {
