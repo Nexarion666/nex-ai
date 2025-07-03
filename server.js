@@ -2,8 +2,10 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware pour autorisation
+// 🔓 Middleware modifié : accès libre à "/"
 app.use((req, res, next) => {
+  if (req.path === "/") return next(); // autorise la page d’accueil
+
   const auth = req.headers["authorization"];
   if (auth === "Bearer 123456abcXYZ") {
     next();
@@ -12,12 +14,12 @@ app.use((req, res, next) => {
   }
 });
 
-// Route d'accueil
+// ✅ Page d’accueil ouverte à tous
 app.get("/", (req, res) => {
-  res.send("Bienvenue sur Nex-AI !");
+  res.send("Bienvenue sur Nex-AI 🎉 Le site est EN LIGNE !");
 });
 
-// ✅ Route /generate corrigée
+// 🔐 Route protégée
 app.get("/generate", (req, res) => {
   res.send("Génération réussie depuis /generate ✅");
 });

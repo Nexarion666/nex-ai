@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Nexarion Test</title>
+</head>
+<body>
+  <h1>Test de génération Nexarion 🚀</h1>
+  <button onclick="generate()">Appeler /generate</button>
+  <pre id="output"></pre>
+
+  <script>
+    async function generate() {
+      const response = await fetch("https://nex-ai-4ijj.onrender.com/generate", {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer 123456abcXYZ"
+        }
+      });
+
+      const text = await response.text();
+      document.getElementById("output").textContent = text;
+    }
+  </script>
+</body>
+</html>
