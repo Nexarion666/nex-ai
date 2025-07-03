@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Générateur Vidéo IA</title>
+</head>
+<body>
+  <h2>🎬 Générateur de Vidéo IA avec Image (optionnelle)</h2>
+
+  <label>Prompt :</label><br>
+  <input type="text" id="prompt" placeholder="Une ville futuriste sous la pluie" size="60"><br><br>
+
+  <label>Image (facultatif) :</label><br>
+  <input type="file" id="image"><br><br>
+
+  <button onclick="generer()">GÉNÉRER</button>
+
+  <div id="resultat" style="margin-top:20px;"></div>
+
+  <script>
+    async function generer() {
+      const prompt = document.getElementById("prompt").value;
+      const image = document.getElementById("image").files[0];
+      const resultat = document.getElementById("resultat");
+
+      resultat.innerHTML = "⏳ Génération en cours...";
+
+      const formData = new FormData();
+      formData.append("prompt", prompt);
+      formData.append("resolution", "512x512");
+      formData.append("duration", 5);
+      formData.append("safe_mode", false);
+      if (image) {
+        formData.append("init_image", image);
+      }
+
+      try {
+        const res = await fetch("/generate", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.video_url) {
+          resultat.innerHTML = `
+            <h3>✅ Vidéo générée :</h3>
+            <video controls autoplay loop width="512">
+              <source src="${data.video_url}" type="video/mp4">
+              Ton navigateur ne supporte pas la vidéo.
+            </video>`;
+        } else {
+          resultat.innerHTML = "<p>❌ Erreur : aucune vidéo reçue.</p>";
+          console.log(data);
+        }
+      } catch (err) {
+        resultat.innerHTML = "<p>❌ Une erreur est survenue.</p>";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
