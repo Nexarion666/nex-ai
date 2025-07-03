@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Tester /generate</title>
+</head>
+<body>
+  <h1>Test Nex-AI – Génération</h1>
+  <button onclick="tester()">Générer</button>
+  <pre id="résultat" style="margin-top:20px; padding:10px; background:#f0f0f0;"></pre>
+
+  <script>
+    async function tester() {
+      try {
+        const réponse = await fetch("https://www.nexarion.sale/generate", {
+          method: "GET",
+          headers: {
+            "Authorization": "Bearer 123456abcXYZ"
+          }
+        });
+
+        const texte = await réponse.text();
+        document.getElementById("résultat").textContent = texte;
+      } catch (erreur) {
+        document.getElementById("résultat").textContent = "❌ Erreur : " + erreur.message;
+      }
+    }
+  </script>
+</body>
+</html>
