@@ -1,53 +1,49 @@
 const express = require("express");
 const multer = require("multer");
 const ffmpeg = require("fluent-ffmpeg");
-const ffmpegPath = require("ffmpeg-static");
+const ffmpegPath = require("ffmpeg-static"); // ✅ Chemin dynamique vers le binaire ffmpeg
 const fs = require("fs");
 const path = require("path");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = 10000;
 
-ffmpeg.setFfmpegPath(ffmpegPath);
-if (!fs.existsSync("outputs")) fs.mkdirSync("outputs");
-
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "*");
-  next();
-});
-
-// Multer pour image + prompt texte
+// Dossier où seront stockées temporairement les images uploadées
 const upload = multer({ dest: "uploads/" });
 
+// 🔧 Lien entre fluent-ffmpeg et le bon binaire ffmpeg
+ffmpeg.setFfmpegPath(ffmpegPath);
+
+// Permet de servir animate.html et autres fichiers statiques
+app.use(express.static("public"));
+
+// Endpoint POST /generate
 app.post("/generate", upload.single("image"), (req, res) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (token !== "123456abcXYZ") return res.status(403).send("Token invalide");
-
   const inputPath = req.file.path;
-  const outputPath = path.join("outputs", Date.now() + ".mp4");
-  const prompt = req.body.prompt?.trim();
+  const outputPath = `output/${Date.now()}.mp4`;
 
-  console.log("✅ Image reçue");
-  console.log("🧠 Prompt reçu :", prompt || "(vide)");
+  // ✅ S'assure que le dossier "output" existe
+  if (!fs.existsSync("output")) {
+    fs.mkdirSync("output");
+  }
 
-  // → Ici on ne fait pas encore parler l’image, mais c’est prêt
-  ffmpeg()
-    .input(inputPath)
-    .loop(5)
-    .fps(25)
-    .outputOptions("-pix_fmt yuv420p")
-    .save(outputPath)
+  console.log("🔧 Traitement de l'image :", inputPath);
+
+  ffmpeg(inputPath)
+    .loop(3) // par exemple 3 secondes
+    .outputOptions("-preset", "fast")
     .on("end", () => {
-      res.sendFile(path.resolve(outputPath), () => {
-        fs.unlinkSync(inputPath);
-        setTimeout(() => fs.existsSync(outputPath) && fs.unlinkSync(outputPath), 10000);
+      console.log("✅ Vidéo générée :", outputPath);
+      res.download(outputPath, () => {
+        fs.unlinkSync(inputPath); // nettoie après envoi
+        fs.unlinkSync(outputPath);
       });
     })
     .on("error", (err) => {
       console.error("❌ Erreur ffmpeg :", err.message);
-      res.status(500).send("Erreur lors de la génération vidéo.");
-    });
+      res.status(500).send("Erreur pendant le traitement vidéo.");
+    })
+    .save(outputPath);
 });
 
 app.listen(port, () => {
