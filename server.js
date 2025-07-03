@@ -9,38 +9,34 @@ const path = require("path");
 const app = express();
 const port = 10000;
 
-// 👉 Middleware
-app.use(cors()); // 🔓 Autorise toutes les origines (nécessaire pour HTML local)
-app.use(express.static("public")); // Sert les fichiers HTML, CSS, etc.
+app.use(cors());
+app.use(express.static("public"));
+app.use("/output", express.static("output")); // Sert les vidéos générées
 
-const upload = multer({ dest: "uploads/" }); // Dossier temporaire pour les images
+const upload = multer({ dest: "uploads/" });
 
-// 🧠 Spécifie à fluent-ffmpeg le chemin du binaire ffmpeg
 ffmpeg.setFfmpegPath(ffmpegPath);
-console.log("🔍 ffmpegPath utilisé :", ffmpegPath);
-// ✅ Crée le dossier 'output' s'il n'existe pas
-if (!fs.existsSync("output")) {
-  fs.mkdirSync("output");
-}
 
-// 🎬 Endpoint de génération
+// Vérifie que les dossiers existent
+if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
+if (!fs.existsSync("output")) fs.mkdirSync("output");
+
 app.post("/generate", upload.single("image"), (req, res) => {
   const inputPath = req.file.path;
-  const outputPath = `output/${Date.now()}.mp4`;
+  const filename = `${Date.now()}.mp4`;
+  const outputPath = path.join("output", filename);
 
   ffmpeg(inputPath)
-    .loop(3) // Durée en secondes
+    .loop(3)
     .outputOptions("-preset", "fast")
     .on("end", () => {
-      console.log("✅ Vidéo prête :", outputPath);
-      res.download(outputPath, () => {
-        fs.unlinkSync(inputPath); // Nettoyage
-        fs.unlinkSync(outputPath);
-      });
+      fs.unlinkSync(inputPath);
+      console.log("✅ Vidéo générée :", outputPath);
+      res.json({ url: `/output/${filename}` });
     })
     .on("error", (err) => {
       console.error("❌ Erreur ffmpeg :", err.message);
-      res.status(500).send("Erreur de traitement vidéo.");
+      res.status(500).send("Erreur lors de la génération de la vidéo.");
     })
     .save(outputPath);
 });

@@ -2,39 +2,93 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Animateur d’image IA</title>
+  <title>🎞️ Animation d'image</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #121212;
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+    }
+    input[type="file"] {
+      margin: 20px;
+    }
+    #progress {
+      width: 80%;
+      height: 18px;
+      margin: 20px auto;
+      background: #444;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #bar {
+      height: 100%;
+      width: 0%;
+      background: #4caf50;
+      transition: width 0.3s ease;
+    }
+    .video-link {
+      display: block;
+      margin-top: 20px;
+      color: #4cafef;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-  <h2>Image + Texte à animer</h2>
-
-  <form id="formulaire" enctype="multipart/form-data">
-    <label>🖼️ Choisir une image :</label><br />
-    <input type="file" name="image" accept="image/*" required /><br /><br />
-
-    <label>💬 Texte / prompt :</label><br />
-    <textarea name="prompt" placeholder="Ex : Fais dire à l’image : Bonjour !" rows="3" cols="40"></textarea><br /><br />
-
+  <h1>💫 Crée ta vidéo animée</h1>
+  <form id="form">
+    <input type="file" name="image" accept="image/*" required />
+    <br />
     <button type="submit">Animer</button>
   </form>
 
-  <div id="résultat" style="margin-top:20px;"></div>
+  <div id="progress"><div id="bar"></div></div>
+
+  <div id="results"></div>
 
   <script>
-    document.getElementById("formulaire").addEventListener("submit", async (e) => {
+    const form = document.getElementById("form");
+    const bar = document.getElementById("bar");
+    const results = document.getElementById("results");
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const data = new FormData(e.target);
+      const file = form.image.files[0];
+      if (!file) return;
 
-      const res = await fetch("https://www.nexarion.sale/generate", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer 123456abcXYZ"
-        },
-        body: data
-      });
+      const data = new FormData();
+      data.append("image", file);
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      document.getElementById("résultat").innerHTML = `<video src="${url}" controls autoplay></video>`;
+      bar.style.width = "20%";
+
+      try {
+        const res = await fetch("/generate", {
+          method: "POST",
+          body: data,
+        });
+
+        bar.style.width = "60%";
+
+        if (res.ok) {
+          const json = await res.json();
+          bar.style.width = "100%";
+
+          const link = document.createElement("a");
+          link.href = json.url;
+          link.innerText = "⬇️ Télécharger la vidéo générée";
+          link.className = "video-link";
+          link.download = "";
+
+          results.prepend(link);
+        } else {
+          throw new Error("Génération échouée");
+        }
+      } catch (err) {
+        bar.style.width = "0%";
+        alert("💥 Erreur : " + err.message);
+      }
     });
   </script>
 </body>
