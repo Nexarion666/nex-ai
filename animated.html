@@ -2,32 +2,31 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Uploader une image</title>
+  <title>Animateur d'image</title>
 </head>
 <body>
-  <h1>Uploader une image pour animation</h1>
-  <form id="uploadForm" enctype="multipart/form-data">
+  <h2>Choisis une image</h2>
+  <form id="formulaire" enctype="multipart/form-data">
     <input type="file" name="image" accept="image/*" required />
     <button type="submit">Animer</button>
   </form>
-  <pre id="resultat" style="margin-top:20px; background:#eee; padding:10px;"></pre>
+  <div id="résultat"></div>
 
   <script>
-    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+    document.getElementById("formulaire").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const formData = new FormData(e.target);
-
+      const data = new FormData(e.target);
       const res = await fetch("https://www.nexarion.sale/generate", {
         method: "POST",
         headers: {
           "Authorization": "Bearer 123456abcXYZ"
         },
-        body: formData
+        body: data
       });
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      document.getElementById("resultat").innerHTML = `<video src="${url}" controls autoplay></video>`;
+      document.getElementById("résultat").innerHTML = `<video src="${url}" controls autoplay></video>`;
     });
   </script>
 </body>
